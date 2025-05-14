@@ -5,11 +5,11 @@ import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 
 def calculate_user_similarity_matrix(user_item_matrix):
-
+    """Calculate cosine similarity between user vectors"""
     return cosine_similarity(user_item_matrix)
 
 def get_similar_users(user_id, user_item_matrix, n=10):
-
+    """Find n most similar users to the target user"""
     try:
         user_idx = list(user_item_matrix.index).index(user_id)
     except ValueError:
@@ -32,15 +32,15 @@ def get_similar_users(user_id, user_item_matrix, n=10):
     
     return similar_users
 
-def get_neighborhood_scores(user_similarities, item_ratings):
-
+def get_neighborhood_scores(user_similarities, item_quantities):
+    """Calculate scores for items based on user neighborhood"""
     scores = {}
-    for item_id, ratings in item_ratings.items():
+    for item_id, quantities in item_quantities.items():
         weighted_sum = 0
         similarity_sum = 0
         
-        for (user_id, sim_score), rating in ratings.items():
-            weighted_sum += sim_score * rating
+        for (user_id, sim_score), quantity in quantities.items():
+            weighted_sum += sim_score * quantity
             similarity_sum += abs(sim_score)
             
         if similarity_sum > 0:

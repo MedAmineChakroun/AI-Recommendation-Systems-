@@ -13,22 +13,22 @@ class RecommenderService:
         """Initialize the recommender service with data and model"""
         self.df = df
         self.svd_model = svd_model
-        self.user_item_matrix = df.pivot_table(index='user_id', columns='item_id', values='rating', fill_value=0)
+        self.user_item_matrix = df.pivot_table(index='user_id', columns='item_id', values='quantity', fill_value=0)
     
     def get_popular_items(self, n=10):
-        """Get the most popular items based on frequency and average rating"""
-        # Calculate item popularity as a function of frequency and average rating
+        """Get the most popular items based on frequency and average purchase quantity"""
+        # Calculate item popularity as a function of frequency and average quantity
         item_stats = self.df.groupby('item_id').agg(
-            count=('rating', 'count'),
-            avg_rating=('rating', 'mean')
+            count=('quantity', 'count'),
+            avg_quantity=('quantity', 'mean')
         ).reset_index()
         
-        # Normalize the counts and ratings
+        # Normalize the counts and quantities
         max_count = item_stats['count'].max()
         item_stats['norm_count'] = item_stats['count'] / max_count
         
-        # Calculate popularity score (weighted combination of frequency and rating)
-        item_stats['popularity'] = (0.7 * item_stats['norm_count']) + (0.3 * item_stats['avg_rating'] / 5.0)
+        # Calculate popularity score (weighted combination of frequency and quantity)
+        item_stats['popularity'] = (0.7 * item_stats['norm_count']) + (0.3 * item_stats['avg_quantity'] / 5.0)
         
         # Sort by popularity score and return top n
         popular_items = item_stats.sort_values('popularity', ascending=False).head(n)
@@ -63,26 +63,26 @@ class RecommenderService:
         
         return selected_items[:n]
     
-    def get_cf_predictions(self, user_id, unrated_items, similar_users):
+    def get_cf_predictions(self, user_id, unpurchased_items, similar_users):
         """Get collaborative filtering predictions based on similar users"""
         cf_scores = defaultdict(float)
         cf_counts = defaultdict(int)
         
         for sim_user, sim_score in similar_users:
-            # Get items rated by similar user
+            # Get items purchased by similar user
             sim_user_items = self.df[self.df['user_id'] == sim_user]['item_id'].unique()
             
-            # Find items the target user hasn't rated
-            new_items = [item for item in sim_user_items if item in unrated_items]
+            # Find items the target user hasn't purchased
+            new_items = [item for item in sim_user_items if item in unpurchased_items]
             
             # Calculate score based on similarity
             for item in new_items:
-                # Get the rating this similar user gave to the item
-                sim_user_rating = self.df[(self.df['user_id'] == sim_user) & 
-                                         (self.df['item_id'] == item)]['rating'].values[0]
+                # Get the quantity this similar user purchased of the item
+                sim_user_quantity = self.df[(self.df['user_id'] == sim_user) & 
+                                         (self.df['item_id'] == item)]['quantity'].values[0]
                 
-                # Weight the rating by similarity score
-                cf_scores[item] += sim_score * sim_user_rating
+                # Weight the quantity by similarity score
+                cf_scores[item] += sim_score * sim_user_quantity
                 cf_counts[item] += 1
         
         # Calculate final collaborative filtering scores
@@ -109,21 +109,21 @@ class RecommenderService:
         # Get all items
         all_items = self.df['item_id'].unique()
         
-        # Get items the user has already rated
+        # Get items the user has already purchased
         user_items = self.df[self.df['user_id'] == user_id]['item_id'].unique()
         
-        # Get items the user hasn't rated
-        unrated_items = np.setdiff1d(all_items, user_items)
+        # Get items the user hasn't purchased
+        unpurchased_items = np.setdiff1d(all_items, user_items)
         
         # Find similar users
         similar_users = get_similar_users(user_id, self.user_item_matrix, n=10)
         
         # Get recommendations from SVD model
-        svd_predictions = get_svd_predictions(self.svd_model, user_id, unrated_items)
+        svd_predictions = get_svd_predictions(self.svd_model, user_id, unpurchased_items)
         svd_top_items = [item for item, _ in svd_predictions[:n*3]]
         
         # Get recommendations from similar users (user-based collaborative filtering)
-        cf_predictions = self.get_cf_predictions(user_id, unrated_items, similar_users)
+        cf_predictions = self.get_cf_predictions(user_id, unpurchased_items, similar_users)
         cf_top_items = [item for item, _ in cf_predictions[:n*2]] if cf_predictions else []
         
         # Hybrid approach: Combine SVD and collaborative filtering

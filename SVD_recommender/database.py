@@ -24,7 +24,7 @@ def fetch_data_from_db():
         SELECT 
             DV.[DocTiersCode] AS user_id, 
             DVL.[LigneArtCode] AS item_id, 
-            SUM(DVL.[LigneQte]) AS rating
+            SUM(DVL.[LigneQte]) AS quantity
         FROM 
             [B2C_DB].[dbo].[DocumentVentes] DV
         JOIN 
@@ -34,7 +34,7 @@ def fetch_data_from_db():
             DV.[DocTiersCode], 
             DVL.[LigneArtCode]
         ORDER BY 
-            rating DESC
+            quantity DESC
         """
       
         # Load data into DataFrame

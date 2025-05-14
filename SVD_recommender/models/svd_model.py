@@ -8,8 +8,8 @@ from config import MODEL_CONFIG
 def create_svd_model(df):
     """Create and train an SVD model using the provided DataFrame"""
     # Create a Surprise reader and dataset
-    reader = Reader(rating_scale=(0, df['rating'].max()))
-    data = Dataset.load_from_df(df[['user_id', 'item_id', 'rating']], reader)
+    reader = Reader(rating_scale=(0, df['quantity'].max()))
+    data = Dataset.load_from_df(df[['user_id', 'item_id', 'quantity']], reader)
     
     # Split the dataset
     trainset, _ = train_test_split(
@@ -43,6 +43,6 @@ def get_svd_predictions(model, user_id, unrated_items):
             print(f"Error predicting for user {user_id}, item {item_id}: {str(e)}")
             continue
     
-    # Sort predictions by estimated rating
+    # Sort predictions by estimated quantity
     predictions.sort(key=lambda x: x[1], reverse=True)
     return predictions

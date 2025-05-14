@@ -17,7 +17,7 @@ REDIS_CONFIG = {
     'db': 0,
     'decode_responses': True
 }
-CACHE_TTL = 1800  # Cache expiry time in seconds (30 minutes)
+CACHE_TTL = 3600  # Cache expiry time in seconds (30 minutes)
 
 # Model hyperparameters
 MODEL_CONFIG = {

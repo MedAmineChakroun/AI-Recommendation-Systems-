@@ -31,7 +31,7 @@ def initialize_system():
         # Initialize the recommender service
         recommender_service = RecommenderService(df, svd_model)
         
-        print(f"Recommendation system initialized with {len(df)} quantities.")
+        print(f"Recommendation system initialized with {len(df)} purchase records.")
         return True
     else:
         print("Failed to initialize recommendation system: No data available.")
