@@ -3,11 +3,11 @@ Main Flask application for recommendation system
 """
 from flask import Flask, request, jsonify
 
-# Import project modules
-from data.database import fetch_data_from_db
+# Import project modules - fix relative imports
+from database import fetch_data_from_db
 from models.svd_model import create_svd_model
-from services.recommender import RecommenderService
-from utils.cache import get_cached_result, cache_result, flush_cache
+from recommender import RecommenderService
+from cache import get_cached_result, cache_result, flush_cache
 from config import DEFAULT_RECOMMENDATIONS
 
 # Initialize Flask app
