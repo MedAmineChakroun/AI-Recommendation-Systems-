@@ -2,66 +2,48 @@
 User similarity calculations for collaborative filtering
 """
 import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
 
-def get_similar_users(user_id, user_item_matrix, n=5):
-    """Find users with similar purchase patterns with increased emphasis on similarity over quantity"""
-    if user_id not in user_item_matrix.index:
+def calculate_user_similarity_matrix(user_item_matrix):
+
+    return cosine_similarity(user_item_matrix)
+
+def get_similar_users(user_id, user_item_matrix, n=10):
+
+    try:
+        user_idx = list(user_item_matrix.index).index(user_id)
+    except ValueError:
         return []
+
+    # Calculate similarity matrix
+    similarity_matrix = calculate_user_similarity_matrix(user_item_matrix)
     
-    # Calculate cosine similarity between users
-    user_similarities = {}
-    user_vector = user_item_matrix.loc[user_id].values
+    # Get similarities for target user
+    user_similarities = similarity_matrix[user_idx]
     
-    for other_user in user_item_matrix.index:
-        if other_user != user_id:
-            other_vector = user_item_matrix.loc[other_user].values
-            
-            # Calculate cosine similarity (with epsilon to avoid division by zero)
-            epsilon = 1e-8
-            similarity = np.dot(user_vector, other_vector) / (max(np.linalg.norm(user_vector), epsilon) * max(np.linalg.norm(other_vector), epsilon))
-            
-            # Count common non-zero elements (common purchased items)
-            user_items = set(np.where(user_vector > 0)[0])
-            other_items = set(np.where(other_vector > 0)[0])
-            common_items = len(user_items.intersection(other_items))
-            total_items = len(user_items.union(other_items))
-            
-            # Calculate Jaccard similarity (common items / total unique items)
-            jaccard_sim = common_items / max(total_items, 1)
-            
-            # Pearson correlation for rating patterns
-            user_mean = np.mean([user_vector[i] for i in user_items]) if user_items else 0
-            other_mean = np.mean([other_vector[i] for i in other_items]) if other_items else 0
-            
-            numerator = 0
-            user_variance = 0
-            other_variance = 0
-            
-            # Calculate Pearson correlation
-            for i in user_items.intersection(other_items):
-                user_centered = user_vector[i] - user_mean
-                other_centered = other_vector[i] - other_mean
-                numerator += user_centered * other_centered
-                user_variance += user_centered ** 2
-                other_variance += other_centered ** 2
-            
-            # Calculate correlation with handling for zero division
-            if user_variance > 0 and other_variance > 0:
-                pearson = numerator / (np.sqrt(user_variance) * np.sqrt(other_variance))
-            else:
-                pearson = 0
-            
-            # Use a weighted combination with HIGHER weight on similarity measures and LOWER on quantity
-            combined_sim = (0.4 * similarity) + (0.4 * pearson) + (0.2 * jaccard_sim)
-            
-            # Penalize users with very few ratings in common to avoid spurious matches
-            min_common_threshold = 2
-            if common_items < min_common_threshold:
-                combined_sim *= (common_items / min_common_threshold)
-            
-            if not np.isnan(combined_sim):
-                user_similarities[other_user] = combined_sim
+    # Get indices of most similar users (excluding self)
+    similar_user_indices = np.argsort(user_similarities)[::-1][1:n+1]
     
-    # Sort by similarity and return top n
-    similar_users = sorted(user_similarities.items(), key=lambda x: x[1], reverse=True)
-    return similar_users[:n]
+    # Convert to list of (user_id, similarity_score) tuples
+    similar_users = [
+        (user_item_matrix.index[idx], user_similarities[idx])
+        for idx in similar_user_indices
+    ]
+    
+    return similar_users
+
+def get_neighborhood_scores(user_similarities, item_ratings):
+
+    scores = {}
+    for item_id, ratings in item_ratings.items():
+        weighted_sum = 0
+        similarity_sum = 0
+        
+        for (user_id, sim_score), rating in ratings.items():
+            weighted_sum += sim_score * rating
+            similarity_sum += abs(sim_score)
+            
+        if similarity_sum > 0:
+            scores[item_id] = weighted_sum / similarity_sum
+            
+    return scores
