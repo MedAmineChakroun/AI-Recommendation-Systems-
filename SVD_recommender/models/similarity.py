@@ -32,18 +32,18 @@ def get_similar_users(user_id, user_item_matrix, n=10):
     
     return similar_users
 
-def get_neighborhood_scores(user_similarities, item_quantities):
+def get_neighborhood_scores(item_quantities):
     """Calculate scores for items based on user neighborhood"""
     scores = {}
-    for item_id, quantities in item_quantities.items():
+    for item_id, user_data in item_quantities.items():
         weighted_sum = 0
         similarity_sum = 0
         
-        for (user_id, sim_score), quantity in quantities.items():
+        for (_, sim_score), quantity in user_data.items():
             weighted_sum += sim_score * quantity
-            similarity_sum += abs(sim_score)
+            similarity_sum += sim_score
             
         if similarity_sum > 0:
             scores[item_id] = weighted_sum / similarity_sum
-            
+    
     return scores

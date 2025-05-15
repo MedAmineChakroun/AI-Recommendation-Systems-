@@ -40,7 +40,10 @@ class RecommenderService:
     def get_cf_predictions(self, user_id, unpurchased_items, similar_users):
         """Get CF predictions using neighborhood scores utility"""
         item_quantities = defaultdict(dict)
-
+        
+        if not similar_users:  # If no similar users found
+            return []
+            
         for sim_user, sim_score in similar_users:
             sim_user_data = self.df[self.df['user_id'] == sim_user]
             for _, row in sim_user_data.iterrows():
@@ -55,38 +58,45 @@ class RecommenderService:
         if user_id not in self.user_item_matrix.index:
             return self.get_diverse_recommendations(n)
 
-        all_items = self.df['item_id'].unique()
-        user_items = self.df[self.df['user_id'] == user_id]['item_id'].unique()
-        unpurchased = np.setdiff1d(all_items, user_items)
+        all_items = set(self.df['item_id'].unique())
+        user_items = set(self.df[self.df['user_id'] == user_id]['item_id'].unique())
+        unpurchased = list(all_items - user_items)
 
-        similar_users = get_similar_users(user_id, self.user_item_matrix, n=10)
-        svd_preds = get_svd_predictions(self.svd_model, user_id, unpurchased)
-        cf_preds = self.get_cf_predictions(user_id, unpurchased, similar_users)
+        try:
+            similar_users = get_similar_users(user_id, self.user_item_matrix, n=10)
+            svd_preds = get_svd_predictions(self.svd_model, user_id, unpurchased)
+            cf_preds = self.get_cf_predictions(user_id, unpurchased, similar_users)
 
-        svd_top = {item: score for item, score in svd_preds[:n * 3]}
-        cf_top = {item: score for item, score in cf_preds[:n * 2]}
+            if not cf_preds and not svd_preds:  # If both prediction methods fail
+                return self.get_diverse_recommendations(n)
 
-        combined = []
-        common = set(svd_top) & set(cf_top)
+            svd_top = {item: score for item, score in svd_preds[:n * 3]}
+            cf_top = {item: score for item, score in cf_preds[:n * 2]}
 
-        for item in common:
-            score = 0.4 * svd_top[item] + 0.6 * cf_top[item]
-            combined.append((item, score))
+            combined = []
+            common = set(svd_top) & set(cf_top)
 
-        for item in cf_top:
-            if item not in common and len(combined) < n:
-                combined.append((item, cf_top[item]))
+            for item in common:
+                score = 0.4 * svd_top[item] + 0.6 * cf_top[item]
+                combined.append((item, score))
 
-        for item in svd_top:
-            if item not in cf_top and len(combined) < n:
-                combined.append((item, svd_top[item]))
+            for item in cf_top:
+                if item not in common and len(combined) < n:
+                    combined.append((item, cf_top[item]))
 
-        if len(combined) < n:
-            fallback = self.get_popular_items(n)
-            used = {i[0] for i in combined}
-            combined += [item for item in fallback if item[0] not in used][:n - len(combined)]
+            for item in svd_top:
+                if item not in cf_top and len(combined) < n:
+                    combined.append((item, svd_top[item]))
 
-        return sorted(combined, key=lambda x: x[1], reverse=True)[:n]
+            if len(combined) < n:
+                fallback = self.get_popular_items(n)
+                used = {i[0] for i in combined}
+                combined += [item for item in fallback if item[0] not in used][:n - len(combined)]
+
+            return sorted(combined, key=lambda x: x[1], reverse=True)[:n]
+        except Exception as e:
+            print(f"Recommendation error for user {user_id}: {e}")
+            return self.get_diverse_recommendations(n)
 
     def get_top_products(self, user_id, n=5):
         try:
