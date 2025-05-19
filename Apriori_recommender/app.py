@@ -49,7 +49,7 @@ def recommend():
         "processing_time_ms": round(processing_time, 2),
 
     })
-
+#weekly by n8n
 @app.route('/api/refresh', methods=['POST'])
 def refresh():
     # get CTR before refreshing
@@ -81,6 +81,27 @@ def refresh():
             "message": "CTR could not be retrieved (None returned)",
             "ctr": round(ctr, 5)
         })
+
+#force refresh by admin
+@app.route('/api/force-refresh', methods=['POST'])
+def force_refresh():
+    print("[FORCE REFRESH] Forcing recommendation engine refresh...")
+    start_time = time.time()
+    
+    try:
+        recommendation_engine.initialize()
+        processing_time = (time.time() - start_time) * 1000  # ms
+        return jsonify({
+            "status": "success",
+            "message": "Recommendation engine forcibly refreshed.",
+            "processing_time_ms": round(processing_time, 2)
+        })
+    except Exception as e:
+        print(f"[ERROR] Failed to force refresh: {e}")
+        return jsonify({
+            "status": "error",
+            "message": f"Force refresh failed: {str(e)}"
+        }), 500
 
 
 if __name__ == '__main__':
