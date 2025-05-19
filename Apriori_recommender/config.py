@@ -12,10 +12,10 @@ DB_CONFIG = {
 
 # Model hyperparameters
 MODEL_CONFIG = {
-    'min_support': 0.02,
+    'min_support': 0.05,
     'min_lift': 1.0,
     'random_state': 42
-}
+} 
 
 # Application settings
 DEFAULT_RECOMMENDATIONS = 5
