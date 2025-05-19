@@ -10,15 +10,6 @@ DB_CONFIG = {
     'trusted_connection': 'yes'
 }
 
-# Redis cache settings
-REDIS_CONFIG = {
-    'host': 'localhost',
-    'port': 6378,
-    'db': 0,
-    'decode_responses': True
-}
-CACHE_TTL = 3600  # Cache expiry time in seconds (30 minutes)
-
 # Model hyperparameters
 MODEL_CONFIG = {
     'n_factors': 250,
