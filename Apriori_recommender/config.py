@@ -19,3 +19,6 @@ MODEL_CONFIG = {
 
 # Application settings
 DEFAULT_RECOMMENDATIONS = 5
+
+# Performance monitoring settings
+Minimum_CTR = 0.05
