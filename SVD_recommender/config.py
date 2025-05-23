@@ -22,4 +22,4 @@ MODEL_CONFIG = {
 # Application settings
 DEFAULT_RECOMMENDATIONS = 5
 
-Minimum_CTR = 0.05
+Minimum_CTR = 0.01
