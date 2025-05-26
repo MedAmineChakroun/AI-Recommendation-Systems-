@@ -133,7 +133,20 @@ def force_retrain_endpoint():
             'status': 'error',
             'message': 'Failed to retrain model (no data available)'
         }), 500
+@app.route('/light-refresh', methods=['POST'])
+def light_refresh():
+    """Lightweight refresh: update df and recommender without retraining"""
+    global df, recommender_service
 
+    df = fetch_data_from_db()
+    if not df.empty:
+        recommender_service.df = df
+        recommender_service.user_item_matrix = df.pivot_table(
+            index='user_id', columns='item_id', values='quantity', fill_value=0
+        )
+        return jsonify({'status': 'success', 'message': 'Data and user matrix refreshed'})
+    else:
+        return jsonify({'status': 'error', 'message': 'No data found in DB'}), 500
 if __name__ == "__main__":
     # Initialize the recommendation system
     initialize_system()
