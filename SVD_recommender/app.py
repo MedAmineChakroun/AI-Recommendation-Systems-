@@ -142,7 +142,7 @@ def light_refresh():
     if not df.empty:
         recommender_service.df = df
         recommender_service.user_item_matrix = df.pivot_table(
-            index='user_id', columns='item_id', values='quantity', fill_value=0
+            index='user_id', columns='item_id', values='rating', fill_value=0
         )
         return jsonify({'status': 'success', 'message': 'Data and user matrix refreshed'})
     else:

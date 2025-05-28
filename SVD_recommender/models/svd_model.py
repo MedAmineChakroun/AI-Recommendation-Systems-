@@ -8,8 +8,8 @@ MODEL_PATH = "svd_model.pkl"
 
 def create_svd_model(df, save_to_disk=True):
     """Create and train an SVD model using the provided DataFrame"""
-    reader = Reader(rating_scale=(0, df['quantity'].max()))
-    data = Dataset.load_from_df(df[['user_id', 'item_id', 'quantity']], reader)
+    reader = Reader(rating_scale=(0, df['rating'].max()))
+    data = Dataset.load_from_df(df[['user_id', 'item_id', 'rating']], reader)
     
     trainset, _ = train_test_split(
         data,

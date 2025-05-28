@@ -10,15 +10,15 @@ class RecommenderService:
     def __init__(self, df, svd_model):
         self.df = df
         self.svd_model = svd_model
-        self.user_item_matrix = df.pivot_table(index='user_id', columns='item_id', values='quantity', fill_value=0)
+        self.user_item_matrix = df.pivot_table(index='user_id', columns='item_id', values='rating', fill_value=0)
 
     def get_popular_items(self, n=10):
         stats = self.df.groupby('item_id').agg(
-            count=('quantity', 'count'),
-            avg_quantity=('quantity', 'mean')
+            count=('rating', 'count'),
+            avg_rating=('rating', 'mean')
         ).reset_index()
         stats['norm_count'] = stats['count'] / stats['count'].max()
-        stats['popularity'] = 0.7 * stats['norm_count'] + 0.3 * (stats['avg_quantity'] / 5.0)
+        stats['popularity'] = 0.7 * stats['norm_count'] + 0.3 * (stats['avg_rating'] / 5.0)
         top_items = stats.sort_values('popularity', ascending=False).head(n)
         return list(zip(top_items['item_id'], top_items['popularity']))
 
@@ -49,7 +49,7 @@ class RecommenderService:
             for _, row in sim_user_data.iterrows():
                 item = row['item_id']
                 if item in unpurchased_items:
-                    item_quantities[item][(sim_user, sim_score)] = row['quantity']
+                    item_quantities[item][(sim_user, sim_score)] = row['rating']
 
         scores = get_neighborhood_scores(item_quantities)
         return sorted(scores.items(), key=lambda x: x[1], reverse=True)

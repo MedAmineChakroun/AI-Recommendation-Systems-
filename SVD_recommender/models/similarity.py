@@ -39,8 +39,8 @@ def get_neighborhood_scores(item_quantities):
         weighted_sum = 0
         similarity_sum = 0
         
-        for (_, sim_score), quantity in user_data.items():
-            weighted_sum += sim_score * quantity
+        for (_, sim_score), rating in user_data.items():
+            weighted_sum += sim_score * rating
             similarity_sum += sim_score
             
         if similarity_sum > 0:

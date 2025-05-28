@@ -22,19 +22,22 @@ def fetch_data_from_db():
         # SQL query to get user-item interactions
         query = """
         SELECT 
-            DV.[DocTiersCode] AS user_id, 
-            DVL.[LigneArtCode] AS item_id, 
-            SUM(DVL.[LigneQte]) AS quantity
+            C.[TiersCode] AS user_id,
+            A.[ArtCode] AS item_id,
+            R.[Stars] AS rating
         FROM 
-            [B2C_DB].[dbo].[DocumentVentes] DV
+            [B2C_DB].[dbo].[Ratings] R
         JOIN 
-            [B2C_DB].[dbo].[DocumentVenteLignes] DVL 
-            ON DV.[DocPiece] = DVL.[LigneDocPiece]
-        GROUP BY 
-            DV.[DocTiersCode], 
-            DVL.[LigneArtCode]
+            [B2C_DB].[dbo].[Clients] C ON R.[UserId] = C.[TiersId]
+        JOIN 
+            [B2C_DB].[dbo].[Articles] A ON R.[ProductId] = A.[ArtId]
+        WHERE 
+            R.[Stars] IS NOT NULL
+            AND C.[TiersCode] IS NOT NULL
+            AND A.[ArtCode] IS NOT NULL
         ORDER BY 
-            quantity DESC
+             rating DESC;
+
         """
       
         # Load data into DataFrame
