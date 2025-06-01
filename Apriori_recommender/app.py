@@ -65,14 +65,14 @@ def refresh():
             recommendation_engine.initialize()
             processing_time = (time.time() - start_time) * 1000  # Convert to milliseconds
             return jsonify({
-                "status": "success",
-                "message": "Recommendation engine refreshed successfully",
+                "status": "retrained",
+                "message": "Le moteur de recommandation a bien été mis à jour.",
                 "processing_time_ms": round(processing_time, 2)
             })
         else:
             return jsonify({
                 "status": "skipped",
-                "message": "CTR is acceptable, no refresh needed",
+                "message": "Le système donne satisfaction, aucun réentraînement n’est requis pour l’instant.",
                 "ctr": round(ctr, 5) 
             })
     else:

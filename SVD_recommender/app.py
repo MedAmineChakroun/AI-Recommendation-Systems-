@@ -98,10 +98,10 @@ def refresh_data():
 
         # If CTR is below threshold, model was retrained
         if ctr is not None and ctr < Minimum_CTR:
-            message = "CTR is low, model retrained "
+            message = "Le moteur de recommandation a bien été mis à jour. "
             model_status = 'retrained'
         else:
-            message = "CTR is acceptable, no refresh needed"
+            message = "Le système donne satisfaction, aucun réentraînement n’est requis pour l’instant."
             model_status = 'skipped'
             
         return jsonify({
@@ -147,6 +147,7 @@ def light_refresh():
         return jsonify({'status': 'success', 'message': 'Data and user matrix refreshed'})
     else:
         return jsonify({'status': 'error', 'message': 'No data found in DB'}), 500
+
 if __name__ == "__main__":
     # Initialize the recommendation system
     initialize_system()
